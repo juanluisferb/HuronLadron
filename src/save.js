@@ -10,11 +10,13 @@ function read() {
 }
 
 export const save = {
-  data: { unlocked: 1, best: {}, ferret: 'pepis' },
+  data: { unlocked: 1, best: {}, ferret: 'pepis', names: {}, custom: [] },
 
   load() {
     const d = read();
-    if (d && typeof d === 'object') this.data = { ...this.data, ...d, best: { ...(d.best || {}) } };
+    if (d && typeof d === 'object') {
+      this.data = { ...this.data, ...d, best: { ...(d.best || {}) }, names: { ...(d.names || {}) }, custom: Array.isArray(d.custom) ? d.custom : [] };
+    }
     return this.data;
   },
 

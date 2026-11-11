@@ -216,10 +216,151 @@ const DRAW = {
     p.vline(0, 0, H, 'M');
     p.vline(W - 1, 0, H, 'M');
   },
-  burrow({ p }) {
+  burrow({ p, variant }) {
+    if (variant === 'hole') {
+      p.ellipse(8, 9, 7.5, 5.5, 'N');
+      p.ellipse(8, 9.5, 5.5, 3.8, 'k');
+      p.ellipse(8, 8, 4, 1.5, 'q');
+      return;
+    }
     p.ellipse(8, 9, 7.5, 5.5, 'E');
     p.ellipse(8, 9, 5.5, 3.6, 'u');
     p.ellipse(7, 8, 3, 1.6, 'U');
+  },
+  tree({ p, W, H }) {
+    p.rect(W / 2 - 3, H - 18, 6, 18, 'M');
+    p.vline(W / 2 - 3, H - 18, 18, 'm');
+    p.ellipse(W / 2, H - 4, 9, 3, 'V');
+    p.ellipse(W / 2, 20, 15.5, 17, 'V');
+    p.ellipse(W / 2 - 5, 15, 9, 9, 'v');
+    p.ellipse(W / 2 + 6, 22, 8, 8, 'v');
+    p.ellipse(W / 2 - 2, 9, 6, 5, 'v');
+    for (const [x, y] of [[8, 14], [20, 26], [24, 10], [12, 28]]) p.set(x, y, 'r');
+  },
+  hedge({ p, W, H }) {
+    p.rect(0, 2, W, H - 2, 'V');
+    p.ellipse(4, 5, 5, 5, 'v');
+    p.ellipse(12, 6, 5, 5, 'v');
+    p.ellipse(8, 3, 5, 3, 'v');
+    for (let i = 0; i < 6; i++) p.set((i * 7) % W, 12 + (i * 5) % (H - 14), 'v');
+  },
+  flowerbed({ p, W, H }) {
+    p.rect(0, 4, W, H - 4, 'N');
+    p.hline(0, 4, W, 'n');
+    const cols = ['r', 'y', 'p', 'w', 'u'];
+    for (let i = 0; i < 9; i++) {
+      const x = 2 + ((i * 11) % (W - 4));
+      const y = 5 + ((i * 7) % (H - 8));
+      p.vline(x, y, 3, 'V');
+      p.rect(x - 1, y - 1, 3, 2, cols[i % cols.length]);
+    }
+  },
+  patiotable({ p, W, H, foot }) {
+    const top = foot - 6;
+    p.ellipse(W / 2, top / 2 + 2, W / 2, top / 2 + 1, 'w');
+    p.ellipse(W / 2, top / 2 + 1, W / 2 - 3, top / 2 - 2, 'a');
+    p.rect(W / 2 - 1, top, 3, H - top, 'g');
+    p.rect(W / 2 - 7, H - 2, 15, 2, 'G');
+  },
+  bench({ p, W, H }) {
+    p.rect(0, 0, W, 6, 'm');
+    p.hline(0, 3, W, 'M');
+    p.rect(0, 8, W, 6, 'm');
+    p.hline(0, 11, W, 'M');
+    p.rect(2, 14, 3, H - 14, 'G');
+    p.rect(W - 5, 14, 3, H - 14, 'G');
+  },
+  bbq({ p, W, H }) {
+    p.ellipse(8, 8, 7, 5, 'k');
+    p.ellipse(8, 7, 6, 3.6, 'G');
+    for (let x = 3; x < 14; x += 2) p.vline(x, 5, 5, 'g');
+    p.rect(3, 11, 2, H - 11, 'G');
+    p.rect(11, 11, 2, H - 11, 'G');
+    p.set(6, 7, 'r'); p.set(9, 8, 'y');
+  },
+  sunbed({ p, W, H }) {
+    p.rect(1, 0, W - 2, 12, 'b');
+    for (let y = 2; y < 12; y += 3) p.hline(1, y, W - 2, 'w');
+    p.rect(1, 12, W - 2, H - 18, 'b');
+    for (let y = 14; y < H - 6; y += 3) p.hline(1, y, W - 2, 'w');
+    p.rect(1, H - 6, 2, 6, 'g');
+    p.rect(W - 3, H - 6, 2, 6, 'g');
+  },
+  clothesline({ p, W, H }) {
+    p.rect(1, 2, 2, H - 2, 'g');
+    p.rect(W - 3, 2, 2, H - 2, 'g');
+    p.hline(1, 4, W - 2, 'W');
+    const cols = ['r', 'b', 'y', 'v', 'w'];
+    for (let i = 0; i < 5; i++) {
+      const x = 5 + i * 8;
+      p.rect(x, 5, 5, 8 + (i % 2) * 3, cols[i]);
+      p.rect(x + 1, 4, 1, 2, 'm');
+    }
+    p.rect(0, H - 2, W, 2, 'G');
+  },
+  toolbox({ p, W, H }) {
+    p.rect(1, 6, W - 2, H - 6, 'r');
+    p.rect(1, 6, W - 2, 3, 'R');
+    p.rect(5, 2, 6, 2, 'G');
+    p.vline(5, 2, 4, 'G'); p.vline(10, 2, 4, 'G');
+    p.set(8, 12, 'y');
+  },
+  pond({ p, W, H }) {
+    p.ellipse(W / 2, H / 2, W / 2, H / 2, 'g');
+    p.ellipse(W / 2, H / 2, W / 2 - 3, H / 2 - 3, 'B');
+    p.ellipse(W / 2 - 3, H / 2 - 3, 6, 4, 'b');
+    p.ellipse(W / 2 + 6, H / 2 + 4, 3, 2, 'v');
+    p.set(W / 2 + 2, H / 2 + 6, 't');
+    p.set(W / 2 - 6, H / 2 + 2, 'c');
+  },
+  wheelbarrow({ p, W, H }) {
+    p.rect(2, 2, W - 10, 10, 'v');
+    p.rect(2, 2, W - 10, 3, 'V');
+    p.rect(4, 4, 6, 4, 'N');
+    p.ellipse(W - 6, H - 5, 4, 4, 'k');
+    p.ellipse(W - 6, H - 5, 2, 2, 'g');
+    p.hline(W - 10, 6, 10, 'G');
+    p.rect(4, 12, 2, H - 12, 'G');
+  },
+  doghouse({ p, W, H, foot }) {
+    const roof = 14;
+    for (let y = 0; y < roof; y++) {
+      const half = Math.round((y / roof) * (W / 2));
+      p.hline(W / 2 - half, y, half * 2, y < roof - 2 ? 'R' : 'x');
+    }
+    p.rect(2, roof, W - 4, H - roof, 'm');
+    for (let y = roof + 3; y < H; y += 4) p.hline(2, y, W - 4, 'M');
+    p.ellipse(W / 2, H - 6, 6, 8, 'k');
+    p.rect(W / 2 - 6, H - 6, 12, 6, 'k');
+    p.rect(W / 2 - 5, roof + 2, 10, 3, 'w');
+    void foot;
+  },
+  armchair({ p, W, H }) {
+    p.rect(1, 0, W - 2, 12, 'U');
+    p.rect(0, 8, 4, H - 8, 'U');
+    p.rect(W - 4, 8, 4, H - 8, 'U');
+    p.rect(4, 10, W - 8, 10, 'u');
+    p.rect(3, 20, W - 6, H - 20, 'U');
+  },
+  piano({ p, W, H }) {
+    p.rect(0, 0, W, H, 'k');
+    p.rect(0, 0, W, 10, 'z');
+    p.rect(2, 13, W - 4, 6, 'w');
+    for (let x = 4; x < W - 3; x += 3) p.rect(x, 13, 1, 4, 'k');
+    p.rect(2, 21, W - 4, H - 23, 'z');
+    p.rect(6, 2, 8, 6, 'w');
+    p.rect(7, 3, 6, 4, 'e');
+  },
+  fireplace({ p, W, H }) {
+    p.rect(0, 0, W, H, 'A');
+    p.rect(0, 0, W, 10, 'a');
+    p.hline(0, 10, W, 'g');
+    p.rect(6, 16, W - 12, H - 16, 'k');
+    p.ellipse(W / 2, H - 4, 7, 6, 'r');
+    p.ellipse(W / 2, H - 3, 4, 4, 'y');
+    p.ellipse(W / 2, H - 2, 2, 2, 'w');
+    p.rect(4, 2, 4, 6, 'y');
+    p.rect(W - 9, 3, 5, 5, 'v');
   },
   tube({ p }) {
     p.ellipse(8, 9, 7, 5.5, 'g');
@@ -231,6 +372,7 @@ const DRAW = {
 /** Devuelve {pix, tall} del mueble; para la tele hay variante encendida. */
 export function furnitureSprite(type, w, h, variant) {
   const b = base(type, w, h);
+  b.variant = variant;
   DRAW[type](b);
   if (type === 'tv' && variant === 'on') {
     b.p.rect(5, 2, b.W - 10, 11, 'c');
@@ -238,9 +380,8 @@ export function furnitureSprite(type, w, h, variant) {
     b.p.rect(15, 6, 8, 5, 'y');
     b.p.hline(5, 12, b.W - 10, 'b');
   }
-  // Margen de 1 px para que el contorno también rodee los bordes del sprite.
+  // Margen de 1 px para que el contorno (que se añade al pasar a HD) rodee los bordes del sprite.
   const pad = new Pix(b.W + 2, b.H + 2);
   pad.blit(b.p, 1, 1);
-  if (type !== 'burrow' && type !== 'tube') pad.outline('o');
-  return { ...b, pix: pad };
+  return { ...b, pix: pad, outline: !['burrow', 'tube', 'pond'].includes(type) };
 }

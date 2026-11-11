@@ -5,6 +5,8 @@ import { UI } from '../gfx/palette.js';
 import { sound } from '../audio/audio.js';
 import { save } from '../save.js';
 import { LEVELS } from '../data/levels/index.js';
+import { uiView } from '../ui/view.js';
+import { profile } from '../profiles.js';
 
 export class Results extends Phaser.Scene {
   constructor() { super('Results'); }
@@ -16,8 +18,7 @@ export class Results extends Phaser.Scene {
   }
 
   create() {
-    const W = this.scale.width;
-    const H = this.scale.height;
+    const { W, H } = uiView(this);
     const r = this.result;
     const lv = LEVELS.find((l) => l.id === this.levelId);
     const isBest = save.record(this.levelId, r, LEVELS.length);
@@ -26,8 +27,9 @@ export class Results extends Phaser.Scene {
     text(this, W / 2, 14, r.win ? '¡NIVEL SUPERADO!' : '¡NO LLEGASTE A LA CUOTA!', { color: r.win ? UI.gold : UI.red, scale: 2, align: 'center' });
     text(this, W / 2, 34, `${lv.id}. ${lv.name}`, { color: UI.gray, align: 'center' });
 
-    const spr = this.add.sprite(46, 74, `ferret_${this.ferret}`).setScale(2);
-    spr.play(r.win ? `ferret_${this.ferret}_side` : `ferret_${this.ferret}_down_idle`);
+    const fid = profile(this.ferret).id;
+    const spr = this.add.sprite(46, 80, `fer_${fid}_side`).setOrigin(0.5, 33 / 36);
+    spr.play(r.win ? `fer_${fid}_run` : `fer_${fid}_idle`);
     if (!r.win) this.add.image(62, 56, 'icon_zzz');
 
     const lines = [

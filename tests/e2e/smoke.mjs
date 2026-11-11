@@ -34,7 +34,6 @@ await page.waitForTimeout(1300);
 ok((await scene(page)).includes('Select'), 'selección de hurón');
 await page.keyboard.press('ArrowRight');
 await page.waitForTimeout(200);
-await shot(page, '02-select.png');
 await page.keyboard.press('Enter');
 await page.waitForTimeout(1300);
 ok((await scene(page)).includes('Levels'), 'selección de nivel');
@@ -61,23 +60,58 @@ await page.waitForTimeout(300);
 ok(!(await scene(page)).includes('Pause'), 'reanudar');
 await page.close();
 
+// 1b) Nombre editable y editor de hurones.
+page = await open();
+await page.evaluate(() => localStorage.clear());
+await page.keyboard.press('Enter');
+await page.waitForTimeout(1300);
+await page.keyboard.press('ArrowDown'); // de la tarjeta de Pepis baja al botón NOMBRE
+await page.waitForTimeout(200);
+await page.keyboard.press('Enter');
+await page.waitForTimeout(700);
+ok((await scene(page)).includes('NameEntry'), 'pantalla de nombre');
+for (let i = 0; i < 6; i++) await page.keyboard.press('Backspace');
+await page.keyboard.type('Rayo');
+await page.waitForTimeout(200);
+await shot(page, '08-name.png');
+await page.keyboard.press('Enter');
+await page.waitForTimeout(1200);
+const names = await page.evaluate(() => JSON.parse(localStorage.getItem('huron.save.v1')).names);
+ok(names.pepis === 'Rayo', `nombre cambiado (${JSON.stringify(names)})`);
+await page.evaluate(() => { const g = window.__game; g.scene.getScenes(true).forEach((s) => g.scene.stop(s.scene.key)); g.scene.start('Editor', { id: null }); });
+await page.waitForTimeout(1200);
+const key = async (k, n = 1) => { for (let i = 0; i < n; i++) { await page.keyboard.press(k); await page.waitForTimeout(60); } };
+await key('ArrowDown');
+await key('ArrowRight', 3);
+await page.waitForTimeout(400);
+await shot(page, '09-editor.png');
+await key('ArrowDown', 9);
+await page.keyboard.press('Enter');
+await page.waitForTimeout(1500);
+const custom = await page.evaluate(() => JSON.parse(localStorage.getItem('huron.save.v1')).custom);
+ok(custom.length === 1 && custom[0].look.body, 'hurón personalizado guardado');
+ok((await scene(page)).includes('Select'), 'vuelve a la selección');
+await page.waitForTimeout(500);
+await shot(page, '02-select.png');
+await page.close();
+
 // 2) Controles táctiles: toques en menús, joystick arrastrado y botón A.
 page = await open('', { hasTouch: true, isMobile: true });
-const W = await page.evaluate(() => window.__game.scale.width);
+const LW = (await page.evaluate(() => window.__game.scale.width)) / 2;
 const k = 448 / 224;
 const tap = async (gx, gy) => { await page.touchscreen.tap(gx * k, gy * k); await page.waitForTimeout(400); };
 await page.evaluate(() => localStorage.clear());
-await tap(W / 2, 116);
+await tap(LW / 2, 116);
 await page.waitForTimeout(900);
 ok((await scene(page)).includes('Select'), 'táctil: JUGAR');
-const cw = Math.min(104, Math.floor((W - 16) / 3));
-const x0 = Math.round((W - cw * 3 - 8) / 2);
-await tap(x0 + cw / 2, 100);
-await tap(x0 + cw / 2, 100);
+const sx0 = Math.round((LW - 100 * 3 - 12) / 2);
+await tap(sx0 + 50, 100);
+await tap(sx0 + 50, 100);
 await page.waitForTimeout(900);
 ok((await scene(page)).includes('Levels'), 'táctil: elegir hurón (doble toque)');
-await tap(x0 + cw / 2, 110);
-await tap(x0 + cw / 2, 110);
+const lx0 = Math.round((LW - 100 * 3 - 12) / 2);
+await tap(lx0 + 50, 70);
+await tap(lx0 + 50, 70);
 await page.waitForTimeout(1500);
 ok((await scene(page)).includes('Game'), 'táctil: elegir nivel');
 const cdp = await page.context().newCDPSession(page);
@@ -91,25 +125,25 @@ await touchEv('touchEnd', []);
 const q1 = await page.evaluate(() => ({ x: window.__world.ferret.x, y: window.__world.ferret.y }));
 ok(q1.x - q0.x > 20, 'táctil: el joystick mueve al hurón');
 const H = 224;
-await tap(W - 32, H - 46);
-await tap(W - 12, 34);
+await tap(LW - 32, H - 46);
+await tap(LW - 12, 34);
 await page.waitForTimeout(600);
 ok((await scene(page)).includes('Pause'), 'táctil: botón de pausa');
 await page.close();
 
 // 3) El bot juega cada nivel acelerado hasta la pantalla de resultados (en pantalla táctil).
-for (const lvl of [1, 2, 3]) {
+for (const lvl of [1, 2, 3, 4, 5]) {
   page = await open('?bot=1&speed=8', { hasTouch: true, isMobile: true });
   await page.evaluate((l) => {
-    localStorage.setItem('huron.save.v1', JSON.stringify({ unlocked: 3, best: {}, ferret: 'chonko' }));
+    localStorage.setItem('huron.save.v1', JSON.stringify({ unlocked: 5, best: {}, ferret: 'chonko' }));
     const g = window.__game;
     g.scene.getScenes(true).forEach((s) => g.scene.stop(s.scene.key));
-    g.scene.start('Game', { levelId: l, ferret: ['sardi', 'pepis', 'chonko'][l - 1] });
+    g.scene.start('Game', { levelId: l, ferret: ['sardi', 'pepis', 'chonko', 'pepis', 'sardi'][l - 1] });
   }, lvl);
   await page.waitForTimeout(6000);
   await shot(page, `1${lvl}-level${lvl}.png`);
   let done = false;
-  for (let i = 0; i < 90 && !done; i++) {
+  for (let i = 0; i < 120 && !done; i++) {
     await page.waitForTimeout(1000);
     done = (await scene(page)).includes('Results');
   }

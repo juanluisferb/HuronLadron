@@ -70,7 +70,7 @@ export class World {
       return { ...base, container: null, originContainer: null, x, y, ox: x, oy: y };
     });
 
-    const fd = FERRETS[ferretId];
+    const fd = typeof ferretId === 'string' ? FERRETS[ferretId] : ferretId;
     this.ferret = {
       def: fd,
       x: tileCenter(levelDef.start.x),

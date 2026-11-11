@@ -20,6 +20,9 @@ export const GROUND = {
   '.': { floor: 'wood' },
   ',': { floor: 'tile' },
   '_': { floor: 'carpet' },
+  'g': { floor: 'grass' },   // césped: amortigua los pasos
+  'p': { floor: 'path' },    // camino de piedras
+  's': { floor: 'soil' },    // tierra de huerto: amortigua los pasos
   'D': { floor: 'wood', door: 'open' },     // puerta siempre abierta
   'd': { floor: 'wood', door: 'closable' }, // se cierra cuando el dueño se alerta
   ' ': { void: true },
@@ -55,7 +58,7 @@ export function computeFlags(level) {
     const g = ground[i];
     if (g.wall || g.void) flags[i] = F.BLOCK_FERRET | F.BLOCK_OWNER | F.BLOCK_VISION | F.WALL;
     else if (g.floor === 'tile') flags[i] = F.SLIPPERY;
-    else if (g.floor === 'carpet') flags[i] = F.CARPET;
+    else if (g.floor === 'carpet' || g.floor === 'grass' || g.floor === 'soil') flags[i] = F.CARPET;
     if (g.door) flags[i] |= F.DOOR;
   }
   for (const d of level.doors) {

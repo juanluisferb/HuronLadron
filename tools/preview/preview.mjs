@@ -7,11 +7,11 @@ import path from 'node:path';
 import fs from 'node:fs';
 
 const out = process.argv[2] ?? 'preview.png';
-const entry = path.resolve('tools/preview/sheet.js');
+const entry = path.resolve(process.argv[3] ?? 'tools/preview/ferrets.js');
 const res = await build({ entryPoints: [entry], bundle: true, write: false, format: 'iife' });
 const js = res.outputFiles[0].text;
 const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width: 1200, height: 900 } });
+const page = await browser.newPage({ viewport: { width: 3200, height: 1400 } });
 page.on('console', (m) => console.log('[page]', m.text()));
 page.on('pageerror', (e) => console.log('[error]', e.message));
 await page.setContent('<html><body style="margin:0;background:#334"></body></html>');

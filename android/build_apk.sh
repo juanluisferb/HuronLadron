@@ -7,7 +7,7 @@ cd "$(dirname "$0")/.."
 ROOT=$PWD
 CACHE=android/.cache
 BUILD=build/android
-OUT=release/huron-ladron.apk
+OUT=release/huron-ladron-${APK_VERSION:-1.2}.apk
 mkdir -p "$CACHE" "$BUILD" release
 
 M=https://repo1.maven.org/maven2

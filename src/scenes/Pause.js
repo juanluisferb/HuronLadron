@@ -4,6 +4,7 @@ import { Menu } from '../ui/controls.js';
 import { UI } from '../gfx/palette.js';
 import { sound } from '../audio/audio.js';
 import { LEVELS } from '../data/levels/index.js';
+import { uiView } from '../ui/view.js';
 
 export class Pause extends Phaser.Scene {
   constructor() { super('Pause'); }
@@ -11,8 +12,7 @@ export class Pause extends Phaser.Scene {
   init(data) { this.data2 = data; }
 
   create() {
-    const W = this.scale.width;
-    const H = this.scale.height;
+    const { W, H } = uiView(this);
     const lv = LEVELS.find((l) => l.id === this.data2.levelId);
     this.add.rectangle(0, 0, W, H, 0x000000, 0.6).setOrigin(0);
     const pw = 220;

@@ -123,6 +123,23 @@ const DRAW = {
     p.set(9, 5, 'y');
     p.hline(2, 8, 8, 'M');
   },
+  trowel(p) {
+    p.rect(1, 9, 5, 2, 'n');
+    p.rect(1, 9, 5, 1, 'm');
+    p.line(5, 9, 7, 7, 0.6, 'g');
+    p.ellipse(8.5, 5, 2.8, 3.8, 's');
+    p.set(8, 3, 'w');
+  },
+  frisbee(p) {
+    p.ellipse(6, 6, 5.2, 3.4, 'r');
+    p.ellipse(6, 5.5, 3.4, 1.8, 'f');
+    p.hline(3, 6, 6, 'y');
+  },
+  tongs(p) {
+    p.line(1, 10, 10, 2, 0.6, 's');
+    p.line(2, 11, 11, 4, 0.6, 'g');
+    p.rect(0, 9, 3, 3, 'k');
+  },
   slipper(p) {
     p.ellipse(6, 7, 5, 3, 'b');
     p.ellipse(7, 7, 3, 1.6, 'B');
@@ -133,7 +150,6 @@ const DRAW = {
 export function itemIcon(icon, tint) {
   const p = new Pix(ICON, ICON);
   DRAW[icon](p);
-  p.outline('o');
   const extra = {};
   if (tint) {
     extra.c = md(TINTS[tint][0]);

@@ -16,8 +16,8 @@ import zipfile
 
 PACKAGE = "com.huronladron.game"
 APP_LABEL = "Hurón Ladrón"
-VERSION_CODE = 1
-VERSION_NAME = "0.1.0"
+VERSION_CODE = 2
+VERSION_NAME = "1.2.0"
 MIN_SDK = 24  # Android 7.0+: basta la firma v2 (apksig 2.3.0 no puede firmar v1 con JDK 21)
 TARGET_SDK = 34
 ICON_PATH = "res/drawable-nodpi-v4/icon.png"

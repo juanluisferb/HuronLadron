@@ -20,3 +20,27 @@ export const FERRETS = {
   },
 };
 export const FERRET_ORDER = ['sardi', 'pepis', 'chonko'];
+
+// Estilos de juego para los hurones personalizados (los tres primeros copian a los originales).
+export const STYLES = {
+  rapido: { label: 'Rápido', from: 'sardi' },
+  sigiloso: { label: 'Sigiloso', from: 'pepis' },
+  fuerte: { label: 'Fuerte', from: 'chonko' },
+  equilibrado: {
+    label: 'Equilibrado',
+    def: {
+      walk: 68, run: 110, sneak: 35, energy: 85, noise: 0.85, slots: 1, carryPenalty: 0.8,
+      stats: { speed: 3, stealth: 4, strength: 3, energy: 3 },
+      desc: 'Un poco de todo: ni muy rápido ni muy torpe.',
+    },
+  },
+};
+export const STYLE_ORDER = ['equilibrado', 'rapido', 'sigiloso', 'fuerte'];
+
+/** Estadísticas de juego de un estilo. */
+export function styleStats(style) {
+  const s = STYLES[style] ?? STYLES.equilibrado;
+  const src = s.from ? FERRETS[s.from] : s.def;
+  const { walk, run, sneak, energy, noise, slots, carryPenalty, stats, desc } = src;
+  return { walk, run, sneak, energy, noise, slots, carryPenalty, stats, desc, style: s.label };
+}

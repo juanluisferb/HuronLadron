@@ -1,6 +1,6 @@
 # Hurón Ladrón
 
-Juego 2D de sigilo para Android con estética de 16 bits (tipo Mega Drive). Eres un hurón que roba
+Juego 2D de sigilo para Android con estética de 16 bits (tipo Mega Drive). **Versión 1.2.** Eres un hurón que roba
 calcetines, llaves, mandos y todo lo que pilla por la casa, y lo esconde en su madriguera o en el
 sofá antes de que el dueño le pille. Llena la cuota de cada nivel para conseguir hasta 3 estrellas.
 
@@ -9,8 +9,9 @@ sofá antes de que el dueño le pille. Llena la cuota de cada nivel para consegu
 | | |
 |---|---|
 | ![Título](docs/screenshots/01-title.png) | ![Selección](docs/screenshots/02-select.png) |
-| ![Juego](docs/screenshots/04-game.png) | ![Táctil](docs/screenshots/07-touch.png) |
-| ![Nivel 3](docs/screenshots/13-level3.png) | ![Resultados](docs/screenshots/06-results.png) |
+| ![Piso](docs/screenshots/04-game.png) | ![Jardín](docs/screenshots/14-level4.png) |
+| ![Casa grande](docs/screenshots/15-level5.png) | ![Editor](docs/screenshots/09-editor.png) |
+| ![Nombre](docs/screenshots/08-name.png) | ![Resultados](docs/screenshots/06-results.png) |
 
 Todo está generado por el código de este directorio: pixel art (personajes, objetos, muebles,
 suelos, fuente bitmap e icono), efectos de sonido y música chiptune (Web Audio). No hay ni un
@@ -18,10 +19,16 @@ asset externo.
 
 ## Instalar en el móvil
 
-APK listo en [`release/huron-ladron.apk`](release/huron-ladron.apk) (≈ 370 KB, Android 7.0 o superior).
+| Versión | APK | Novedades |
+|---|---|---|
+| **1.2** | [`release/huron-ladron-1.2.apk`](release/huron-ladron-1.2.apk) (≈ 390 KB) | Gráficos en alta resolución, niveles 4 y 5, nombres editables y editor de hurones |
+| 0.1 | [`release/huron-ladron.apk`](release/huron-ladron.apk) | Primera versión jugable (3 niveles), se conserva como base |
+
+Ambas están firmadas con la misma clave y la 1.2 tiene un código de versión mayor, así que se instala
+encima de la 0.1 conservando el progreso. Requieren Android 7.0 o superior.
 
 1. Copia el APK al móvil y ábrelo (Android pedirá permitir «instalar apps de origen desconocido»).
-2. O por USB: `adb install -r release/huron-ladron.apk`
+2. O por USB: `adb install -r release/huron-ladron-1.2.apk`
 
 Se juega en horizontal y a pantalla completa. El botón «atrás» pausa la partida.
 
@@ -62,6 +69,13 @@ más difícil:
 
 ### Hurones
 
+Los nombres de los tres hurones se pueden cambiar (botón **NOMBRE** en la selección) con un teclado en
+pantalla que también acepta el teclado físico. Sus diseños originales se mantienen.
+
+Con la tarjeta **CREA TU HURÓN** abres el **editor**: pelaje (albino, champán, canela, sable, chocolate,
+negro, plata, rojizo), patas y cola, antifaz, hocico, ojos, nariz, pelo corto o peludo, tamaño y estilo
+de juego (equilibrado, rápido, sigiloso o fuerte). Se pueden guardar hasta 6, editarlos y borrarlos.
+
 | | Sardi | Pepis | Chonko |
 |---|---|---|---|
 | Pelaje | Blanco | Sable marrón | Chocolate, más peludo |
@@ -78,7 +92,14 @@ más difícil:
 3. **Visita en casa**: dueño + invitada con rutas distintas. El bolso y el abrigo de la invitada
    esconden lo más valioso (cartera, móvil, gafas de sol).
 
-El nivel 2 se desbloquea al superar el 1, y el 3 al superar el 2. El progreso y los récords se guardan.
+4. **El jardín** (exterior): césped que amortigua los pasos, terraza, estanque, setos, flores y bancos
+   donde esconderse, tendedero con calcetines y caseta de herramientas. La madriguera es el agujero de
+   la caseta del perro. El jardinero hace barbacoa y su pareja toma el sol.
+5. **La casa grande**: diez estancias (dormitorio, baño, despacho, cuarto infantil, cocina, salón con
+   chimenea y piano, comedor, lavadero, recibidor) unidas por un pasillo largo, dos tubos para cruzarla y
+   dos humanos.
+
+Cada nivel se desbloquea al superar el anterior. El progreso y los récords se guardan.
 
 ## Controles
 
@@ -101,7 +122,7 @@ npm run dev        # http://localhost:8080 con recarga automática
 npm test           # tests de la simulación y de los datos de los niveles (node:test)
 npm run test:e2e   # prueba en Chromium (Playwright): menús, teclado, táctil y los 3 niveles con el bot
 npm run balance    # el bot juega los 3 niveles con los 3 hurones y muestra puntos/estrellas
-npm run apk        # compila dist/ y genera release/huron-ladron.apk
+npm run apk        # compila dist/ y genera release/huron-ladron-1.2.apk
 ```
 
 Modo de pruebas en el navegador: `index.html?bot=1&speed=4` hace que el bot juegue solo y acelera la
@@ -114,8 +135,9 @@ src/
   sim/        Simulación pura (sin Phaser): rejilla, colisiones, A*, visión, ruido, IA del dueño,
               puntuación y el bot. Se usa en el juego, en los tests y en el balance.
   data/       Objetos, hurones y niveles (mapas tallados por habitaciones + muebles + rutinas).
-  gfx/        Pixel art generado por código: paleta de 9 bits (como la Mega Drive), personajes,
-              objetos, muebles, suelos, paredes, fuente 5x7 con tildes.
+  gfx/        Pixel art generado por código: hurones con esqueleto animado (ferret.js), humanos HD
+              (humans.js), suelos y paredes HD (floors.js), muebles y objetos con biselado y
+              texturas (hd.js), fuente 5x7 con tildes.
   audio/      Efectos y música (3 canales: pulso, triángulo y ruido) con Web Audio.
   scenes/     Boot, Title, Select, Levels, Game, Hud, Pause, Results.
   ui/         Texto bitmap, paneles, menús navegables y controles (teclado, mando, táctil).
@@ -152,4 +174,17 @@ si la regeneras, desinstala la app antes de instalar una versión nueva.
 - **Cámara cenital 3/4** en lugar de isométrica: es lo que mejor funciona en 2D pixel art. Paredes y
   muebles altos se vuelven semitransparentes cuando el hurón pasa por detrás.
 - La Mega Drive es de **16 bits**: la paleta está cuantizada a 3 bits por canal, como su VDP.
-- Resolución interna de 224 px de alto; el ancho (320–480) se adapta a la pantalla del móvil.
+- Resolución interna de 448 px de alto (el ancho, 640–960, se adapta a la pantalla): el mundo se dibuja
+  a doble resolución para tener más detalle, y la interfaz usa zoom 2 para mantener su aspecto retro.
+
+### Novedades de la 1.2
+
+- **Hurones nuevos**: se dibujan con un esqueleto (columna que se arquea y se estira en el galope, patas
+  articuladas, hocico claro y orejas rosas) inspirado en la animación de referencia. Galope de 6
+  fotogramas, sigilo agachado, reposo y de pie sobre las patas traseras (en el corralito o al
+  quedarse quieto).
+- **Casa y humanos más detallados**: suelos con veta y brillo, papel pintado por nivel, muebles con
+  biselado y texturas, y humanos con ojos, cejas, pelo con brillo y ropa con sombras.
+- **Niveles 4 (jardín) y 5 (casa grande)**, con muebles y objetos nuevos (paleta de jardín, frisbee,
+  pinzas de barbacoa).
+- **Nombres editables y editor de hurones.**

@@ -24,9 +24,23 @@ export class Bot {
     return { x: Math.floor(f.x / TILE), y: Math.floor(f.y / TILE) };
   }
 
+  /** Camino que evita pasar pegado a los humanos (si no hay otro, el normal). */
   pathTo(tx, ty) {
     const t = this.tile();
-    return findPath(this.w.level, t.x, t.y, tx, ty, F.BLOCK_FERRET, 20000);
+    const lv = this.w.level;
+    const flags = lv.flags.slice();
+    for (const o of this.w.owners) {
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const x = o.tx + dx;
+          const y = o.ty + dy;
+          if (x < 0 || y < 0 || x >= lv.w || y >= lv.h || (x === tx && y === ty) || (x === t.x && y === t.y)) continue;
+          flags[y * lv.w + x] |= F.BLOCK_FERRET;
+        }
+      }
+    }
+    return findPath({ ...lv, flags }, t.x, t.y, tx, ty, F.BLOCK_FERRET, 20000)
+      ?? findPath(lv, t.x, t.y, tx, ty, F.BLOCK_FERRET, 20000);
   }
 
   /** Elige el siguiente objetivo: {x, y, kind, ref}. */
@@ -42,7 +56,9 @@ export class Bot {
       if ((this.skip.get(`${kind}:${ref}`) ?? 0) > w.time) return;
       const p = findPath(w.level, t.x, t.y, x, y, F.BLOCK_FERRET, 20000);
       if (!p) return;
-      const s = value / (p.length + 6);
+      // Penaliza objetivos junto a un humano.
+      const near = w.owners.some((o) => Math.abs(o.tx - x) <= 2 && Math.abs(o.ty - y) <= 2);
+      const s = value / (p.length + 6) / (near ? 4 : 1);
       if (s > bestScore) { bestScore = s; best = { x, y, kind, ref }; }
     };
     for (const it of w.items) {

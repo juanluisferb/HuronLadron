@@ -5,6 +5,8 @@ import { touch, isTouchDevice, Menu } from '../ui/controls.js';
 import { UI } from '../gfx/palette.js';
 import { ITEMS } from '../data/items.js';
 import { sound } from '../audio/audio.js';
+import { uiView, ZOOM } from '../ui/view.js';
+import { HD } from '../gfx/textures.js';
 
 const TIER_NAMES = ['TRANQUILO', 'ALERTA', 'PARANOIA'];
 const TIER_COLORS = [UI.green, UI.orange, UI.red];
@@ -15,8 +17,9 @@ export class Hud extends Phaser.Scene {
   create() {
     this.gameScene = this.scene.get('Game');
     this.world = this.gameScene.world;
-    const W = this.scale.width;
-    const H = this.scale.height;
+    const { W, H } = uiView(this);
+    this.W = W;
+    this.H = H;
     const q = this.world.quota;
     this.qMax = Math.round(q[2] * 1.12);
 
@@ -44,7 +47,7 @@ export class Hud extends Phaser.Scene {
     // Bloque izquierdo: objetos en la boca, energía y ruido.
     this.slots = [0, 1].map((i) => {
       const g = this.add.graphics();
-      const img = this.add.image(14 + i * 20, 36, 'px').setVisible(false);
+      const img = this.add.image(14 + i * 20, 36, 'px').setVisible(false).setScale(HD);
       const tag = text(this, 18 + i * 20, 39, 'B', { color: UI.blue });
       return { g, img, tag, x: 4 + i * 20, y: 26 };
     });
@@ -81,17 +84,16 @@ export class Hud extends Phaser.Scene {
 
   // ------------------------------------------------------------------ táctil
   buildTouch() {
-    const W = this.scale.width;
-    const H = this.scale.height;
+    const { W, H } = this;
     this.input.addPointer(3);
     const L = this.add.container(0, 0);
     this.touchLayer = L;
     this.joyHome = { x: 46, y: H - 46 };
-    this.joyBase = this.add.image(this.joyHome.x, this.joyHome.y, 'touch_base').setAlpha(0.6);
-    this.joyKnob = this.add.image(this.joyHome.x, this.joyHome.y, 'touch_knob').setAlpha(0.8);
+    this.joyBase = this.add.image(this.joyHome.x, this.joyHome.y, 'touch_base').setAlpha(0.6).setScale(HD);
+    this.joyKnob = this.add.image(this.joyHome.x, this.joyHome.y, 'touch_knob').setAlpha(0.8).setScale(HD);
     L.add([this.joyBase, this.joyKnob]);
     const mk = (key, x, y, r, label) => {
-      const img = this.add.image(x, y, key).setAlpha(0.75);
+      const img = this.add.image(x, y, key).setAlpha(0.75).setScale(HD);
       const t = text(this, x, y + r + 2, label, { color: UI.text, align: 'center' });
       L.add([img, t]);
       return { img, x, y, r: r + 6, label: t, ptr: null };
@@ -111,12 +113,13 @@ export class Hud extends Phaser.Scene {
     touch.active = true;
 
     const R = 26;
-    this.input.on('pointerdown', (p) => {
+    this.input.on('pointerdown', (ptr) => {
       if (!this.touchLayer.visible || this.modalMenu) return;
+      const p = { id: ptr.id, x: ptr.x / ZOOM, y: ptr.y / ZOOM };
       for (const [k, b] of Object.entries(this.btns)) {
         if (Math.hypot(p.x - b.x, p.y - b.y) <= b.r) {
           b.ptr = p.id;
-          b.img.setAlpha(1).setScale(0.92);
+          b.img.setAlpha(1).setScale(HD * 0.92);
           if (k === 'a') { touch.a = true; touch.aHeld = true; }
           if (k === 'b') touch.b = true;
           if (k === 'run') touch.run = true;
@@ -131,8 +134,9 @@ export class Hud extends Phaser.Scene {
         this.joyKnob.setPosition(p.x, p.y);
       }
     });
-    this.input.on('pointermove', (p) => {
-      if (p.id !== this.joyPtr) return;
+    this.input.on('pointermove', (ptr) => {
+      if (ptr.id !== this.joyPtr) return;
+      const p = { id: ptr.id, x: ptr.x / ZOOM, y: ptr.y / ZOOM };
       const dx = p.x - this.joyBase.x;
       const dy = p.y - this.joyBase.y;
       const d = Math.hypot(dx, dy);
@@ -153,7 +157,7 @@ export class Hud extends Phaser.Scene {
       for (const [k, b] of Object.entries(this.btns)) {
         if (b.ptr === p.id) {
           b.ptr = null;
-          b.img.setScale(1).setAlpha(k === 'sneak' && this.sneakOn ? 1 : 0.75);
+          b.img.setScale(HD).setAlpha(k === 'sneak' && this.sneakOn ? 1 : 0.75);
           if (k === 'a') touch.aHeld = false;
           if (k === 'run') touch.run = false;
         }
@@ -169,7 +173,7 @@ export class Hud extends Phaser.Scene {
 
   // ------------------------------------------------------------------ API para Game
   toast(msg, color = UI.text) {
-    const W = this.scale.width;
+    const { W } = this;
     const t = text(this, W / 2, 0, wrap(msg, 46), { color, align: 'center' });
     this.toasts.push({ t, life: 2.6 });
     if (this.toasts.length > 3) this.toasts.shift().t.destroy();
@@ -188,7 +192,7 @@ export class Hud extends Phaser.Scene {
   }
 
   showHint(msg) {
-    const W = this.scale.width;
+    const { W } = this;
     this.hintBox.removeAll(true);
     const lines = wrap(msg, 40);
     const n = lines.split('\n').length;
@@ -202,8 +206,7 @@ export class Hud extends Phaser.Scene {
   }
 
   confirm(msg, cb) {
-    const W = this.scale.width;
-    const H = this.scale.height;
+    const { W, H } = this;
     const c = this.add.container(0, 0).setDepth(100);
     const w = 200;
     const x = W / 2 - w / 2;
@@ -294,7 +297,7 @@ export class Hud extends Phaser.Scene {
       this.showHint(this.hintQueue.shift());
     }
     // Avisos apilados.
-    const H = this.scale.height;
+    const { H } = this;
     let y = H - 62;
     for (let i = this.toasts.length - 1; i >= 0; i--) {
       const t = this.toasts[i];

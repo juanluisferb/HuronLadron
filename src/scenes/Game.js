@@ -10,6 +10,8 @@ import { Bot } from '../sim/bot.js';
 import { text, wrap } from '../ui/text.js';
 import { UI } from '../gfx/palette.js';
 import { sound } from '../audio/audio.js';
+import { HD } from '../gfx/textures.js';
+import { profile, ferretDef } from '../profiles.js';
 
 const HIDES = new Set(['bed', 'table', 'desk', 'chair']);
 const DECALS = new Set(['burrow', 'tube']);
@@ -24,7 +26,9 @@ export class Game extends Phaser.Scene {
 
   create() {
     this.def = LEVELS.find((l) => l.id === this.levelId);
-    this.world = new World(this.def, this.ferretId, { seed: (Date.now() & 0xffff) + 1 });
+    this.profile = profile(this.ferretId);
+    this.world = new World(this.def, ferretDef(this.profile), { seed: (Date.now() & 0xffff) + 1 });
+    this.theme = this.def.theme ?? this.def.id;
     this.controls = new Controls(this);
     // Modo de pruebas: ?bot=1 juega solo, ?speed=N acelera la simulación.
     const q = new URLSearchParams(window.location.search);
@@ -49,8 +53,9 @@ export class Game extends Phaser.Scene {
     this.fx = this.add.graphics().setDepth(9000);
 
     const cam = this.cameras.main;
-    const W = this.scale.width;
-    const H = this.scale.height;
+    cam.setZoom(2);
+    const W = this.scale.width / 2;
+    const H = this.scale.height / 2;
     const bx = Math.min(-8, (this.lvW - W) / 2);
     const bw = Math.max(this.lvW + 16, W);
     cam.setBounds(bx, -30, bw, Math.max(this.lvH + 30 + 24, H));
@@ -79,8 +84,8 @@ export class Game extends Phaser.Scene {
     const key = 'floor_level';
     if (this.textures.exists(key)) this.textures.remove(key);
     const c = document.createElement('canvas');
-    c.width = this.lvW;
-    c.height = this.lvH;
+    c.width = this.lvW * 2;
+    c.height = this.lvH * 2;
     const ctx = c.getContext('2d');
     ctx.fillStyle = '#100c18';
     ctx.fillRect(0, 0, c.width, c.height);
@@ -90,8 +95,9 @@ export class Game extends Phaser.Scene {
         const g = lv.ground[y * lv.w + x];
         if (g.wall || g.void) continue;
         const v = (x * 7 + y * 13 + ((x * y) % 5)) % 4;
-        const k = g.floor === 'tile' ? `floor_tile_${(x + y) % 2}` : g.floor === 'carpet' ? `floor_carpet_${v % 2}` : `floor_wood_${v}`;
-        ctx.drawImage(img(k), x * TILE, y * TILE);
+        const f = g.floor;
+        const k = f === 'wood' ? `floor_wood_${v}` : f === 'grass' ? `floor_grass_${v}` : `floor_${f}_${f === 'tile' ? (x + y) % 2 : v % 2}`;
+        ctx.drawImage(img(k), x * TILE * 2, y * TILE * 2);
       }
     }
     // Sombra suave al pie de las paredes.
@@ -99,11 +105,14 @@ export class Game extends Phaser.Scene {
     for (let y = 1; y < lv.h; y++) {
       for (let x = 0; x < lv.w; x++) {
         const g = lv.ground[y * lv.w + x];
-        if (!g.wall && lv.ground[(y - 1) * lv.w + x].wall) ctx.fillRect(x * TILE, y * TILE, TILE, 3);
+        if (!g.wall && lv.ground[(y - 1) * lv.w + x].wall) {
+          ctx.fillRect(x * TILE * 2, y * TILE * 2, TILE * 2, 6);
+          ctx.fillRect(x * TILE * 2, y * TILE * 2 + 6, TILE * 2, 2);
+        }
       }
     }
     this.textures.addCanvas(key, c);
-    this.add.image(0, 0, key).setOrigin(0).setDepth(0);
+    this.add.image(0, 0, key).setOrigin(0).setDepth(0).setScale(HD);
   }
 
   buildWalls() {
@@ -115,19 +124,19 @@ export class Game extends Phaser.Scene {
         if (!g.wall) continue;
         const below = y + 1 < lv.h ? lv.ground[(y + 1) * lv.w + x] : null;
         const front = below && !below.wall && !below.void;
-        const s = this.add.image(x * TILE, (y + 1) * TILE, front ? `wall_front_${this.levelId}` : 'wall_top')
-          .setOrigin(0, 1).setDepth((y + 1) * TILE);
+        const s = this.add.image(x * TILE, (y + 1) * TILE, front ? `wall_front_${this.theme}` : `wall_top_${this.theme}`)
+          .setOrigin(0, 1).setDepth((y + 1) * TILE).setScale(HD);
         this.walls.push(s);
       }
     }
-    this.doorSprites = lv.doors.map((d) => this.add.image(d.x * TILE, (d.y + 1) * TILE, 'door_open').setOrigin(0, 1).setDepth((d.y + 1) * TILE));
+    this.doorSprites = lv.doors.map((d) => this.add.image(d.x * TILE, (d.y + 1) * TILE, `door_open_${this.theme}`).setOrigin(0, 1).setDepth((d.y + 1) * TILE).setScale(HD));
   }
 
   buildFurniture() {
     this.furn = this.world.level.furniture.map((f) => {
       const def = FURNITURE[f.type];
       const r = furnitureRect(f);
-      const s = this.add.image(r.x * TILE - 1, (r.y + r.h) * TILE + 1, `furn_${f.type}`).setOrigin(0, 1);
+      const s = this.add.image(r.x * TILE - 1, (r.y + r.h) * TILE + 1, f.look === 'hole' ? 'furn_burrow_hole' : `furn_${f.type}`).setOrigin(0, 1).setScale(HD);
       s.setDepth(DECALS.has(f.type) ? 0.5 : (r.y + r.h) * TILE - 0.5);
       let spark = null;
       if (def.container) {
@@ -147,7 +156,7 @@ export class Game extends Phaser.Scene {
 
   buildItems() {
     this.itemSprites = this.world.items.map((it) => {
-      const s = this.add.image(it.x, it.y, `item_${it.id}`);
+      const s = this.add.image(it.x, it.y, `item_${it.id}`).setScale(HD);
       if (ITEMS[it.id].power) {
         s.glow = this.add.image(it.x, it.y, 'sparkle').setDepth(8000).setAlpha(0.8);
         this.tweens.add({ targets: s.glow, alpha: 0.1, duration: 400, yoyo: true, repeat: -1 });
@@ -158,10 +167,11 @@ export class Game extends Phaser.Scene {
 
   buildActors() {
     const f = this.world.ferret;
-    this.ferretSpr = this.add.sprite(f.x, f.y + 4, `ferret_${this.ferretId}`).setOrigin(0.5, 0.875);
-    this.carrySpr = [this.add.image(0, 0, 'px').setVisible(false), this.add.image(0, 0, 'px').setVisible(false)];
+    this.ferretSpr = this.add.sprite(f.x, f.y + 4, `fer_${this.ferretId}_down`).setScale(HD);
+    this.carrySpr = [0, 1].map(() => this.add.image(0, 0, 'px').setVisible(false).setScale(HD));
+    this.stillT = 0;
     this.ownerSpr = this.world.owners.map((o) => {
-      const s = this.add.sprite(o.x, o.y + 6, `human_${o.skin}`).setOrigin(0.5, 1);
+      const s = this.add.sprite(o.x, o.y + 6, `human_${o.skin}`).setOrigin(0.5, 1).setScale(HD);
       const mark = text(this, 0, 0, '', { color: UI.orange, align: 'center', depth: 9500, scale: 2 });
       const meter = this.add.graphics().setDepth(9500);
       const bubble = this.add.container(0, 0).setDepth(9600).setVisible(false);
@@ -258,10 +268,20 @@ export class Game extends Phaser.Scene {
     s.setFlipX(flip);
     s.setVisible(f.state !== 'tube');
     const moving = f.moving || f.state === 'slide';
-    const key = moving ? `ferret_${id}_${dir}` : `ferret_${id}_${dir}_idle`;
+    this.stillT = moving ? 0 : this.stillT + dt;
+    let key;
+    if (f.state === 'caught') {
+      key = `fer_${id}_stand`;
+    } else if (dir === 'side') {
+      if (!moving) key = this.stillT % 7 > 5 ? `fer_${id}_stand` : `fer_${id}_idle`;
+      else key = f.mode === 'sneak' ? `fer_${id}_sneak` : `fer_${id}_run`;
+    } else {
+      key = moving ? `fer_${id}_${dir}` : `fer_${id}_${dir}_idle`;
+    }
     if (s.anims.currentAnim?.key !== key) s.play(key, true);
-    s.anims.timeScale = f.mode === 'run' ? 1.7 : f.mode === 'sneak' ? 0.55 : f.state === 'slide' ? 0.2 : 1;
-    s.setScale(f.state === 'slide' ? 1.15 : 1, f.mode === 'sneak' ? 0.85 : 1);
+    s.setOrigin(0.5, dir === 'side' || f.state === 'caught' ? 33 / 36 : 36 / 40);
+    s.anims.timeScale = f.state === 'slide' ? 0.15 : f.mode === 'run' ? 1.5 : f.mode === 'sneak' ? 0.8 : dir === 'side' ? 0.75 : 1;
+    s.setScale(HD * (f.state === 'slide' ? 1.1 : 1), HD);
     const hidden = this.world.ferretVisibility() === 0 && f.state === 'free';
     let alpha = hidden ? 0.6 : 1;
     if (f.graceT > 0) alpha = Math.floor(f.graceT * 10) % 2 ? 0.3 : 0.9;
@@ -269,7 +289,7 @@ export class Game extends Phaser.Scene {
     if (f.state === 'caught') s.x += Math.sin(this.time.now / 40) * 1.2;
 
     // Objetos en la boca.
-    const offs = dir === 'side' ? [[flip ? -10 : 10, -6], [flip ? -6 : 6, -9]] : dir === 'down' ? [[0, -3], [4, -6]] : [[0, -16], [4, -18]];
+    const offs = dir === 'side' || f.state === 'caught' ? [[flip ? -11 : 11, -7], [flip ? -7 : 7, -10]] : dir === 'down' ? [[0, -3], [4, -6]] : [[0, -14], [4, -16]];
     this.carrySpr.forEach((cs, i) => {
       const it = f.carried[i];
       if (!it || f.state === 'tube') { cs.setVisible(false); return; }
@@ -369,7 +389,7 @@ export class Game extends Phaser.Scene {
       const col = o.state === 'chase' ? UI.red : o.detect > 0.05 || o.state === 'suspicious' ? UI.orange : 0xffd84a;
       g.fillStyle(col, o.state === 'chase' ? 0.34 : 0.28);
       g.fillPoints(pts, true);
-      g.lineStyle(1, col, 0.7);
+      g.lineStyle(0.5, col, 0.7);
       g.strokePoints(pts, true);
     }
   }
@@ -380,7 +400,7 @@ export class Game extends Phaser.Scene {
     this.rings = this.rings.filter((r) => (r.t += dt) < r.life);
     for (const r of this.rings) {
       const k = r.t / r.life;
-      g.lineStyle(1, r.color, (1 - k) * 0.6);
+      g.lineStyle(0.5, r.color, (1 - k) * 0.6);
       g.strokeCircle(r.x, r.y, 4 + (r.r - 4) * k);
     }
   }
@@ -516,12 +536,12 @@ export class Game extends Phaser.Scene {
 
   syncDoors() {
     this.world.level.doors.forEach((d, i) => {
-      this.doorSprites[i].setTexture(d.closed && d.openTimer <= 0 ? 'door_closed' : 'door_open');
+      this.doorSprites[i].setTexture(d.closed && d.openTimer <= 0 ? `door_closed_${this.theme}` : `door_open_${this.theme}`);
     });
   }
 
   throwKeys(e) {
-    const img = this.add.image(e.x0, e.y0, 'item_keys').setDepth(9000);
+    const img = this.add.image(e.x0, e.y0, 'item_keys').setDepth(9000).setScale(HD);
     const o = { t: 0 };
     this.tweens.add({
       targets: o, t: 1, duration: 450,

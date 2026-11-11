@@ -113,10 +113,19 @@ export class Menu {
     this.sound = opts.sound;
     this.enabled = true;
     this.tapToFocus = opts.tapToFocus ?? false;
+    this.typing = opts.typing ?? false;
     this.prevPad = {};
     this.repeatT = 0;
     this.presses = new KeyPresses(scene);
-    for (const it of items) {
+    this.attach();
+    scene.events.on('update', this.update, this);
+    scene.events.once('shutdown', () => scene.events.off('update', this.update, this));
+    this.onChange?.(this.index);
+  }
+
+  attach() {
+    const scene = this.scene;
+    for (const it of this.items) {
       if (!it.zone) {
         it.zone = scene.add.zone(it.x, it.y, it.w, it.h).setOrigin(0).setInteractive();
         it.zone.setDepth(1000);
@@ -128,15 +137,12 @@ export class Menu {
           this.index = i;
           this.onChange?.(i);
           // En listas de tarjetas, el primer toque solo enfoca.
-          if (this.tapToFocus) { this.sound?.('move'); return; }
+          if (it.tapToFocus ?? this.tapToFocus) { this.sound?.('move'); return; }
         }
         this.sound?.('select');
         it.onSelect?.();
       });
     }
-    scene.events.on('update', this.update, this);
-    scene.events.once('shutdown', () => scene.events.off('update', this.update, this));
-    this.onChange?.(this.index);
   }
 
   move(d) {
@@ -146,17 +152,53 @@ export class Menu {
     this.onChange?.(this.index);
   }
 
+  moveDir([dx, dy]) {
+    const c = (it) => ({ x: it.x + it.w / 2, y: it.y + it.h / 2 });
+    const cur = c(this.items[this.index]);
+    let best = -1;
+    let bs = Infinity;
+    this.items.forEach((it, i) => {
+      if (i === this.index || it.disabled) return;
+      const p = c(it);
+      const along = (p.x - cur.x) * dx + (p.y - cur.y) * dy;
+      if (along <= 2) return;
+      const across = Math.abs((p.x - cur.x) * dy) + Math.abs((p.y - cur.y) * dx);
+      const score = along + across * 2.5;
+      if (score < bs) { bs = score; best = i; }
+    });
+    if (best >= 0) {
+      this.index = best;
+      this.sound?.('move');
+      this.onChange?.(best);
+    }
+  }
+
+  /** Cambia las opciones (p. ej. al desplazar un carrusel) manteniendo el foco. */
+  setItems(items, index = this.index) {
+    for (const it of this.items) it.zone?.destroy();
+    this.items = items;
+    this.index = Math.max(0, Math.min(index, items.length - 1));
+    this.attach();
+    this.onChange?.(this.index);
+  }
+
   update() {
     if (!this.enabled) { this.presses.clear(); return; }
     const K = Phaser.Input.Keyboard.KeyCodes;
     const P = this.presses;
-    const L = P.any(K.LEFT, K.A);
-    const R = P.any(K.RIGHT, K.D);
-    const prev = this.layout === 'v' ? P.any(K.UP, K.W) : L;
-    const next = this.layout === 'v' ? P.any(K.DOWN, K.S) : R;
+    // En la pantalla de nombre las letras se escriben, así que solo valen las flechas.
+    const typing = this.typing;
+    const L = typing ? P.any(K.LEFT) : P.any(K.LEFT, K.A);
+    const R = typing ? P.any(K.RIGHT) : P.any(K.RIGHT, K.D);
+    const UPK = typing ? [K.UP] : [K.UP, K.W];
+    const DNK = typing ? [K.DOWN] : [K.DOWN, K.S];
+    const prev = this.layout === 'v' ? P.any(...UPK) : L;
+    const next = this.layout === 'v' ? P.any(...DNK) : R;
     const side = this.layout === 'v' ? (L ? -1 : R ? 1 : 0) : 0;
-    let ok = P.any(K.ENTER, K.Z, K.SPACE);
-    let back = P.any(K.ESC, K.X, K.BACKSPACE);
+    let ok = typing ? false : P.any(K.ENTER, K.Z, K.SPACE);
+    let back = typing ? P.any(K.ESC) : P.any(K.ESC, K.X, K.BACKSPACE);
+    const upKey = P.any(...UPK);
+    const downKey = P.any(...DNK);
     P.clear();
     let dPrev = prev;
     let dNext = next;
@@ -175,6 +217,17 @@ export class Menu {
       ok ||= e('ok');
       back ||= e('back');
       this.prevPad = st;
+    }
+    if (this.layout === 'grid') {
+      // Navegación geométrica: va a la opción más cercana en la dirección pulsada.
+      const U = upKey || (this.prevPad.up && !this.lastGrid?.up);
+      const D = downKey || (this.prevPad.down && !this.lastGrid?.down);
+      const Lg = L || (this.prevPad.left && !this.lastGrid?.left);
+      const Rg = R || (this.prevPad.right && !this.lastGrid?.right);
+      this.lastGrid = { ...this.prevPad };
+      const dir = U ? [0, -1] : D ? [0, 1] : Lg ? [-1, 0] : Rg ? [1, 0] : null;
+      if (dir) this.moveDir(dir);
+      dPrev = false; dNext = false; dSide = 0;
     }
     if (dPrev) this.move(-1);
     if (dNext) this.move(1);

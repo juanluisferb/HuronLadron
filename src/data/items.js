@@ -23,6 +23,9 @@ export const ITEMS = {
   sunglasses:  { name: 'Gafas de sol',      value: 30, weight: 0.12, noise: 0.15, size: 's', icon: 'sunglasses' },
   phone:       { name: 'Móvil',             value: 45, weight: 0.22, noise: 0.15, size: 'l', icon: 'phone' },
   wallet:      { name: 'Cartera',           value: 60, weight: 0.35, noise: 0.3,  size: 'l', icon: 'wallet' },
+  trowel:      { name: 'Paleta de jardín',  value: 14, weight: 0.08, noise: 0.15, size: 's', icon: 'trowel' },
+  frisbee:     { name: 'Frisbee',           value: 16, weight: 0.06, noise: 0.05, size: 's', icon: 'frisbee' },
+  tongs:       { name: 'Pinzas de barbacoa', value: 22, weight: 0.1,  noise: 0.3,  size: 's', icon: 'tongs' },
   slipper:     { name: 'Zapatilla',         value: 20, weight: 0.3,  noise: 0.1,  size: 'l', icon: 'slipper' },
 };
 

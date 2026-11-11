@@ -1,6 +1,6 @@
 {
   "name": "huron-ladron",
-  "version": "0.1.0",
+  "version": "1.2.0",
   "private": true,
   "description": "Hurón Ladrón: juego 2D de sigilo con hurones (primera versión jugable)",
   "type": "module",

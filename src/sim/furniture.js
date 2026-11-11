@@ -26,5 +26,22 @@ export const FURNITURE = {
   shoerack:  { w: 2, h: 1, blocksFerret: true, blocksOwner: true, tall: 6, container: true, label: 'Zapatero' },
   playpen:   { w: 2, h: 2, blocksFerret: true, blocksOwner: true, tall: 8, label: 'Corralito' },
   burrow:    { w: 1, h: 1, tall: 0, stash: 'burrow', label: 'Madriguera' },
+  // Jardín
+  tree:      { w: 2, h: 2, blocksFerret: true, blocksOwner: true, blocksVision: true, tall: 40 },
+  hedge:     { w: 1, h: 1, blocksFerret: true, blocksOwner: true, blocksVision: true, tall: 16 },
+  flowerbed: { w: 2, h: 1, blocksFerret: false, blocksOwner: true, hides: true, tall: 6, label: 'Flores' },
+  patiotable:{ w: 2, h: 2, blocksFerret: false, blocksOwner: true, hides: true, tall: 12, label: 'Mesa del jardín' },
+  bench:     { w: 2, h: 1, blocksFerret: false, blocksOwner: true, hides: true, tall: 10, label: 'Banco' },
+  bbq:       { w: 1, h: 1, blocksFerret: true, blocksOwner: true, tall: 14 },
+  sunbed:    { w: 1, h: 2, blocksFerret: false, blocksOwner: true, hides: true, tall: 6, label: 'Tumbona' },
+  clothesline:{ w: 3, h: 1, blocksFerret: true, blocksOwner: true, tall: 26, container: true, label: 'Tendedero' },
+  toolbox:   { w: 1, h: 1, blocksFerret: true, blocksOwner: true, tall: 8, container: true, label: 'Caja de herramientas' },
+  pond:      { w: 2, h: 2, blocksFerret: true, blocksOwner: true, tall: 0 },
+  wheelbarrow:{ w: 2, h: 1, blocksFerret: true, blocksOwner: true, tall: 10, container: true, label: 'Carretilla' },
+  doghouse:  { w: 2, h: 2, blocksFerret: false, blocksOwner: true, hides: true, tall: 18, label: 'Caseta' },
+  // Casa grande
+  armchair:  { w: 1, h: 1, blocksFerret: true, blocksOwner: true, tall: 12 },
+  piano:     { w: 3, h: 1, blocksFerret: true, blocksOwner: true, blocksVision: true, tall: 22 },
+  fireplace: { w: 2, h: 1, blocksFerret: true, blocksOwner: true, blocksVision: true, tall: 24 },
   tube:      { w: 1, h: 1, tall: 0, label: 'Tubo' },
 };
